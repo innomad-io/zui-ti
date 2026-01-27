@@ -1,0 +1,429 @@
+/* X AI Reply Assistant - Content Script Styles */
+
+/* 使用 CSS 变量和 Shadow DOM 隔离样式 */
+:root {
+  --zui-primary: #1d9bf0;
+  --zui-primary-hover: #1a8cd8;
+  --zui-bg: #ffffff;
+  --zui-bg-secondary: #f7f9f9;
+  --zui-text: #0f1419;
+  --zui-text-secondary: #536471;
+  --zui-border: #eff3f4;
+  --zui-error: #f4212e;
+  --zui-warning: #ffa500;
+  --zui-success: #00ba7c;
+  --zui-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --zui-radius: 16px;
+  --zui-radius-sm: 8px;
+}
+
+/* 按钮容器 */
+.zui-btn-container {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+/* AI 回复按钮 */
+.zui-reply-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--zui-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.zui-reply-btn:hover {
+  background: rgba(29, 155, 240, 0.1);
+  color: var(--zui-primary);
+}
+
+.zui-reply-btn:active {
+  transform: scale(0.95);
+}
+
+/* 模态框背景 */
+.zui-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: zui-fade-in 0.2s ease;
+}
+
+@keyframes zui-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 模态框 */
+.zui-modal {
+  background: var(--zui-bg);
+  border-radius: var(--zui-radius);
+  box-shadow: var(--zui-shadow);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: zui-slide-up 0.2s ease;
+}
+
+@keyframes zui-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 模态框头部 */
+.zui-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--zui-border);
+}
+
+.zui-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--zui-text);
+}
+
+.zui-icon-primary {
+  color: var(--zui-primary);
+}
+
+.zui-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--zui-text);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.zui-close-btn:hover {
+  background: var(--zui-bg-secondary);
+}
+
+/* 推文预览 */
+.zui-tweet-preview {
+  padding: 12px 16px;
+  background: var(--zui-bg-secondary);
+  border-bottom: 1px solid var(--zui-border);
+}
+
+.zui-tweet-author {
+  font-weight: 600;
+  color: var(--zui-text);
+  font-size: 14px;
+}
+
+.zui-tweet-content {
+  margin-top: 4px;
+  color: var(--zui-text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 警告/错误消息 */
+.zui-warning,
+.zui-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.zui-warning {
+  background: rgba(255, 165, 0, 0.1);
+  color: var(--zui-warning);
+}
+
+.zui-error {
+  background: rgba(244, 33, 46, 0.1);
+  color: var(--zui-error);
+}
+
+/* 风格选择器 */
+.zui-style-selector {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--zui-border);
+}
+
+.zui-styles-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.zui-styles-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.zui-styles-scroll::-webkit-scrollbar-track {
+  background: var(--zui-border);
+  border-radius: 2px;
+}
+
+.zui-styles-scroll::-webkit-scrollbar-thumb {
+  background: var(--zui-text-secondary);
+  border-radius: 2px;
+}
+
+.zui-style-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--zui-border);
+  border-radius: 20px;
+  background: var(--zui-bg);
+  color: var(--zui-text);
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.zui-style-btn:hover {
+  background: var(--zui-bg-secondary);
+  border-color: var(--zui-primary);
+}
+
+.zui-style-btn-active {
+  background: var(--zui-primary);
+  border-color: var(--zui-primary);
+  color: white;
+}
+
+.zui-style-emoji {
+  font-size: 14px;
+}
+
+.zui-style-name {
+  font-weight: 500;
+}
+
+/* 生成按钮 */
+.zui-generate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 24px;
+  background: var(--zui-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.zui-generate-btn:hover:not(:disabled) {
+  background: var(--zui-primary-hover);
+}
+
+.zui-generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading 状态 */
+.zui-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--zui-text-secondary);
+}
+
+.zui-spin {
+  animation: zui-spin 1s linear infinite;
+}
+
+@keyframes zui-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 回复结果 */
+.zui-reply-result {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.zui-reply-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--zui-border);
+  border-radius: var(--zui-radius-sm);
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  color: var(--zui-text);
+}
+
+.zui-reply-textarea:focus {
+  outline: none;
+  border-color: var(--zui-primary);
+}
+
+/* 备选回复 */
+.zui-alternatives {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zui-alternatives-label {
+  font-size: 13px;
+  color: var(--zui-text-secondary);
+}
+
+.zui-alt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--zui-border);
+  border-radius: 50%;
+  background: var(--zui-bg);
+  color: var(--zui-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.zui-alt-btn:hover {
+  background: var(--zui-bg-secondary);
+  border-color: var(--zui-primary);
+  color: var(--zui-primary);
+}
+
+/* 确认提示 */
+.zui-confirm-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 165, 0, 0.1);
+  border-radius: var(--zui-radius-sm);
+  font-size: 13px;
+  color: var(--zui-warning);
+}
+
+/* 操作按钮 */
+.zui-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.zui-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--zui-border);
+  border-radius: 20px;
+  background: var(--zui-bg);
+  color: var(--zui-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.zui-action-btn:hover:not(:disabled) {
+  background: var(--zui-bg-secondary);
+}
+
+.zui-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zui-action-btn-primary {
+  background: var(--zui-primary);
+  border-color: var(--zui-primary);
+  color: white;
+}
+
+.zui-action-btn-primary:hover:not(:disabled) {
+  background: var(--zui-primary-hover);
+}
+
+/* 底部信息 */
+.zui-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--zui-border);
+  text-align: center;
+  font-size: 12px;
+  color: var(--zui-text-secondary);
+}
+
+/* 暗色模式支持 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --zui-bg: #15202b;
+    --zui-bg-secondary: #1e2732;
+    --zui-text: #e7e9ea;
+    --zui-text-secondary: #8b98a5;
+    --zui-border: #38444d;
+  }
+}
+
+/* X 平台暗色模式检测 */
+html[style*="color-scheme: dark"] {
+  --zui-bg: #15202b;
+  --zui-bg-secondary: #1e2732;
+  --zui-text: #e7e9ea;
+  --zui-text-secondary: #8b98a5;
+  --zui-border: #38444d;
+}
