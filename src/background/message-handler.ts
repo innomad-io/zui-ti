@@ -4,6 +4,7 @@ import { getSettings, saveSettings, getApiKey } from '@/shared/utils/storage';
 import { getValidOAuthToken, signInWithGoogle, signOutGoogle, isGoogleSignedIn } from '@/shared/utils/google-oauth';
 import { RateLimiter } from '@/shared/utils/rate-limiter';
 import { ReplyVariator } from '@/shared/utils/reply-variator';
+import { GeminiModelRotator } from '@/shared/utils/gemini-model-rotator';
 
 // 注意：这个函数必须是同步的，返回 true 表示异步响应
 // 不能使用 async 函数，否则会返回 Promise<true> 而不是 true
@@ -72,27 +73,23 @@ async function handleMessageAsync(message: Message): Promise<unknown> {
 async function handleGenerateReply(request: GenerateReplyRequest): Promise<unknown> {
   const settings = await getSettings();
   
-  // 判断是否使用 OAuth
   const useOAuth = settings.ai.provider === 'gemini' && settings.ai.geminiAuthType === 'oauth';
   let apiKey = '';
   let oauthToken: string | undefined;
 
   if (useOAuth) {
-    // 使用 OAuth token
     const token = await getValidOAuthToken();
     if (!token) {
       return { error: 'Google OAuth token expired. Please sign in again in the extension options.' };
     }
     oauthToken = token;
   } else {
-    // 使用 API Key
     apiKey = await getApiKey();
     if (!apiKey) {
       return { error: 'API Key not configured. Please set it in the extension options.' };
     }
   }
 
-  // 检查速率限制
   const rateLimiter = new RateLimiter(settings.safety.level, settings.safety.customConfig);
   const rateStatus = await rateLimiter.canReply();
   
@@ -103,11 +100,18 @@ async function handleGenerateReply(request: GenerateReplyRequest): Promise<unkno
     };
   }
 
-  // 生成回复
+  let modelToUse = settings.ai.model;
+  const rotator = new GeminiModelRotator();
+
+  if (settings.ai.provider === 'gemini') {
+    modelToUse = await rotator.getAvailableModel(settings.ai.model);
+    console.log(`[Gemini Rotator] Selected model: ${modelToUse} (preferred: ${settings.ai.model})`);
+  }
+
   const result = await apiClient.generateReply(
     request,
     settings.ai.provider,
-    settings.ai.model,
+    modelToUse,
     apiKey,
     useOAuth,
     oauthToken
@@ -117,7 +121,10 @@ async function handleGenerateReply(request: GenerateReplyRequest): Promise<unkno
     return { error: result.error };
   }
 
-  // 检查并应用变体
+  if (settings.ai.provider === 'gemini') {
+    await rotator.recordUsage(modelToUse);
+  }
+
   const variator = new ReplyVariator();
   let reply = result.reply;
 
@@ -128,13 +135,12 @@ async function handleGenerateReply(request: GenerateReplyRequest): Promise<unkno
     }
   }
 
-  // 生成备选回复
   let alternatives: string[] = [];
   if (settings.reply.generateAlternatives) {
     alternatives = await apiClient.generateAlternatives(
       request,
       settings.ai.provider,
-      settings.ai.model,
+      modelToUse,
       apiKey,
       settings.reply.alternativesCount,
       useOAuth,
@@ -146,6 +152,7 @@ async function handleGenerateReply(request: GenerateReplyRequest): Promise<unkno
     reply,
     alternatives,
     requireConfirm: rateLimiter.shouldRequireConfirm(),
+    usedModel: modelToUse,
   };
 }
 

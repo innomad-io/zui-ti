@@ -185,36 +185,20 @@
 
 .zui-styles-scroll {
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: thin;
-}
-
-.zui-styles-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.zui-styles-scroll::-webkit-scrollbar-track {
-  background: var(--zui-border);
-  border-radius: 2px;
-}
-
-.zui-styles-scroll::-webkit-scrollbar-thumb {
-  background: var(--zui-text-secondary);
-  border-radius: 2px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .zui-style-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: 3px;
+  padding: 4px 8px;
   border: 1px solid var(--zui-border);
-  border-radius: 20px;
+  border-radius: 16px;
   background: var(--zui-bg);
   color: var(--zui-text);
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
@@ -232,7 +216,7 @@
 }
 
 .zui-style-emoji {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .zui-style-name {
