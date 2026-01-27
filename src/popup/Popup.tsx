@@ -56,7 +56,7 @@ export const Popup: React.FC = () => {
       <header className="popup-header">
         <div className="header-left">
           <Zap size={24} className="icon-primary" />
-          <span className="header-title">X AI Reply</span>
+          <span className="header-title">ZuiTi</span>
         </div>
         <button className="icon-btn" onClick={openOptions} title="Settings">
           <Settings size={20} />

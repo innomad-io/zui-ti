@@ -52,7 +52,7 @@ function init(): void {
     return;
   }
 
-  console.log('X AI Reply Assistant: Content script loaded');
+  console.log('ZuiTi: Content script loaded');
 
   observeReplyWindows();
 }

@@ -11,4 +11,4 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-console.log('X AI Reply Assistant background service started');
+console.log('ZuiTi background service started');

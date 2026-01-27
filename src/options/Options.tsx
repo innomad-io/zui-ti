@@ -154,7 +154,7 @@ export const Options: React.FC = () => {
       <header className="options-header">
         <div className="header-title">
           <Zap size={28} className="icon-primary" />
-          <h1>X AI Reply Assistant</h1>
+          <h1>ZuiTi</h1>
         </div>
         <p className="header-subtitle">Configure your AI-powered reply assistant</p>
       </header>
@@ -429,7 +429,7 @@ export const Options: React.FC = () => {
       </main>
 
       <footer className="options-footer">
-        <p>X AI Reply Assistant v1.0.0</p>
+          <p>ZuiTi v1.0.0</p>
         <p>Your API keys are stored locally and never shared.</p>
       </footer>
     </div>
