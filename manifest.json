@@ -6,8 +6,16 @@
   
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "identity"
   ],
+  
+  "oauth2": {
+    "client_id": "513842350533-snqikcv73a0u72tocf8hgng2hfulq0pr.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/generative-language.retriever"
+    ]
+  },
   
   "host_permissions": [
     "https://x.com/*",

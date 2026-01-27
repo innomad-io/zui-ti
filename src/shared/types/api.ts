@@ -62,6 +62,9 @@ export type MessageType =
   | 'CHECK_RATE_LIMIT'
   | 'RATE_LIMIT_STATUS'
   | 'RECORD_REPLY'
+  | 'GOOGLE_SIGN_IN'
+  | 'GOOGLE_SIGN_OUT'
+  | 'CHECK_GOOGLE_AUTH'
   | 'ERROR';
 
 export interface Message<T = unknown> {

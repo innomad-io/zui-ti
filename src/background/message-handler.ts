@@ -1,6 +1,7 @@
 import type { Message, GenerateReplyRequest, RateLimitStatus, UserSettings } from '@/shared/types';
 import { apiClient } from './api-client';
 import { getSettings, saveSettings, getApiKey } from '@/shared/utils/storage';
+import { getValidOAuthToken, signInWithGoogle, signOutGoogle, isGoogleSignedIn } from '@/shared/utils/google-oauth';
 import { RateLimiter } from '@/shared/utils/rate-limiter';
 import { ReplyVariator } from '@/shared/utils/reply-variator';
 
@@ -49,6 +50,16 @@ async function handleMessageAsync(message: Message): Promise<unknown> {
       case 'RECORD_REPLY':
         return await handleRecordReply(message.payload as { reply: string; tweetId?: string });
 
+      // Google OAuth 相关消息
+      case 'GOOGLE_SIGN_IN':
+        return await handleGoogleSignIn();
+
+      case 'GOOGLE_SIGN_OUT':
+        return await handleGoogleSignOut();
+
+      case 'CHECK_GOOGLE_AUTH':
+        return await handleCheckGoogleAuth();
+
       default:
         return { error: 'Unknown message type' };
     }
@@ -60,10 +71,25 @@ async function handleMessageAsync(message: Message): Promise<unknown> {
 
 async function handleGenerateReply(request: GenerateReplyRequest): Promise<unknown> {
   const settings = await getSettings();
-  const apiKey = await getApiKey();
+  
+  // 判断是否使用 OAuth
+  const useOAuth = settings.ai.provider === 'gemini' && settings.ai.geminiAuthType === 'oauth';
+  let apiKey = '';
+  let oauthToken: string | undefined;
 
-  if (!apiKey) {
-    return { error: 'API Key not configured. Please set it in the extension options.' };
+  if (useOAuth) {
+    // 使用 OAuth token
+    const token = await getValidOAuthToken();
+    if (!token) {
+      return { error: 'Google OAuth token expired. Please sign in again in the extension options.' };
+    }
+    oauthToken = token;
+  } else {
+    // 使用 API Key
+    apiKey = await getApiKey();
+    if (!apiKey) {
+      return { error: 'API Key not configured. Please set it in the extension options.' };
+    }
   }
 
   // 检查速率限制
@@ -82,7 +108,9 @@ async function handleGenerateReply(request: GenerateReplyRequest): Promise<unkno
     request,
     settings.ai.provider,
     settings.ai.model,
-    apiKey
+    apiKey,
+    useOAuth,
+    oauthToken
   );
 
   if (result.error) {
@@ -108,7 +136,9 @@ async function handleGenerateReply(request: GenerateReplyRequest): Promise<unkno
       settings.ai.provider,
       settings.ai.model,
       apiKey,
-      settings.reply.alternativesCount
+      settings.reply.alternativesCount,
+      useOAuth,
+      oauthToken
     );
   }
 
@@ -134,4 +164,48 @@ async function handleRecordReply(payload: { reply: string; tweetId?: string }): 
   await variator.recordReply(payload.reply);
 
   return { success: true };
+}
+
+// Google OAuth 处理函数
+async function handleGoogleSignIn(): Promise<unknown> {
+  try {
+    const token = await signInWithGoogle();
+    // 更新设置为 OAuth 模式
+    const settings = await getSettings();
+    await saveSettings({
+      ai: {
+        ...settings.ai,
+        geminiAuthType: 'oauth',
+      },
+    });
+    return { success: true, token };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to sign in with Google' };
+  }
+}
+
+async function handleGoogleSignOut(): Promise<unknown> {
+  try {
+    await signOutGoogle();
+    // 更新设置回 API Key 模式
+    const settings = await getSettings();
+    await saveSettings({
+      ai: {
+        ...settings.ai,
+        geminiAuthType: 'apiKey',
+      },
+    });
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to sign out' };
+  }
+}
+
+async function handleCheckGoogleAuth(): Promise<unknown> {
+  try {
+    const isSignedIn = await isGoogleSignedIn();
+    return { isSignedIn };
+  } catch (err) {
+    return { isSignedIn: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Eye, EyeOff, Check, AlertCircle, Zap, Shield, Palette } from 'lucide-react';
-import type { UserSettings, AIProviderId, SafetyLevel } from '@/shared/types';
+import { Save, Eye, EyeOff, Check, AlertCircle, Zap, Shield, Palette, LogIn, LogOut } from 'lucide-react';
+import type { UserSettings, AIProviderId, SafetyLevel, GeminiAuthType } from '@/shared/types';
 import { DEFAULT_SETTINGS, SAFETY_PRESETS } from '@/shared/types';
 import { AI_PROVIDERS, getProvider, STYLE_LIST } from '@/shared/constants';
 
@@ -11,11 +11,28 @@ export const Options: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
 
   // 加载设置
   useEffect(() => {
     loadSettings();
+    checkGoogleAuth();
   }, []);
+
+  const checkGoogleAuth = async () => {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'CHECK_GOOGLE_AUTH',
+        payload: null,
+      });
+      if (response?.isSignedIn) {
+        setIsGoogleSignedIn(true);
+      }
+    } catch (err) {
+      console.error('Failed to check Google auth:', err);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -78,8 +95,59 @@ export const Options: React.FC = () => {
     }));
   };
 
+  const handleGoogleSignIn = async () => {
+    setSigningIn(true);
+    setError(null);
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'GOOGLE_SIGN_IN',
+        payload: null,
+      });
+      if (response?.error) {
+        setError(response.error);
+      } else if (response?.success) {
+        setIsGoogleSignedIn(true);
+        setSettings(prev => ({
+          ...prev,
+          ai: { ...prev.ai, geminiAuthType: 'oauth' },
+        }));
+      }
+    } catch (err) {
+      setError('Failed to sign in with Google');
+    } finally {
+      setSigningIn(false);
+    }
+  };
+
+  const handleGoogleSignOut = async () => {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'GOOGLE_SIGN_OUT',
+        payload: null,
+      });
+      if (response?.success) {
+        setIsGoogleSignedIn(false);
+        setSettings(prev => ({
+          ...prev,
+          ai: { ...prev.ai, geminiAuthType: 'apiKey' },
+        }));
+      }
+    } catch (err) {
+      setError('Failed to sign out');
+    }
+  };
+
+  const handleAuthTypeChange = (authType: GeminiAuthType) => {
+    setSettings(prev => ({
+      ...prev,
+      ai: { ...prev.ai, geminiAuthType: authType },
+    }));
+  };
+
   const currentProvider = getProvider(settings.ai.provider);
   const currentSafetyConfig = settings.safety.customConfig || SAFETY_PRESETS[settings.safety.level];
+  const isGemini = settings.ai.provider === 'gemini';
+  const geminiAuthType = settings.ai.geminiAuthType || 'apiKey';
 
   return (
     <div className="options-container">
@@ -130,27 +198,87 @@ export const Options: React.FC = () => {
             </select>
           </div>
 
-          <div className="form-group">
-            <label>API Key</label>
-            <div className="input-with-icon">
-              <input
-                type={showApiKey ? 'text' : 'password'}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your API key"
-              />
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setShowApiKey(!showApiKey)}
-              >
-                {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+          {/* Gemini 认证方式选择 */}
+          {isGemini && (
+            <div className="form-group">
+              <label>Authentication Method</label>
+              <div className="auth-options">
+                <button
+                  className={`auth-option ${geminiAuthType === 'apiKey' ? 'active' : ''}`}
+                  onClick={() => handleAuthTypeChange('apiKey')}
+                >
+                  <span className="auth-name">API Key</span>
+                  <span className="auth-desc">Use Google AI Studio API Key</span>
+                </button>
+                <button
+                  className={`auth-option ${geminiAuthType === 'oauth' ? 'active' : ''}`}
+                  onClick={() => handleAuthTypeChange('oauth')}
+                >
+                  <span className="auth-name">Google Account</span>
+                  <span className="auth-desc">Use Gemini Pro subscription</span>
+                </button>
+              </div>
             </div>
-            <p className="form-hint">
-              Your API key is encrypted and stored locally. It is never sent to any server except the AI provider.
-            </p>
-          </div>
+          )}
+
+          {/* API Key 输入 - 仅在选择 API Key 认证时显示 */}
+          {(!isGemini || geminiAuthType === 'apiKey') && (
+            <div className="form-group">
+              <label>API Key</label>
+              <div className="input-with-icon">
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Enter your API key"
+                />
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <p className="form-hint">
+                Your API key is encrypted and stored locally. It is never sent to any server except the AI provider.
+              </p>
+            </div>
+          )}
+
+          {/* Google 登录按钮 - 仅在选择 OAuth 认证时显示 */}
+          {isGemini && geminiAuthType === 'oauth' && (
+            <div className="form-group">
+              <label>Google Account</label>
+              {isGoogleSignedIn ? (
+                <div className="google-auth-status">
+                  <div className="auth-status-info">
+                    <Check size={18} className="icon-success" />
+                    <span>Connected with Google</span>
+                  </div>
+                  <button
+                    className="google-sign-out-btn"
+                    onClick={handleGoogleSignOut}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="google-sign-in-btn"
+                  onClick={handleGoogleSignIn}
+                  disabled={signingIn}
+                >
+                  <LogIn size={18} />
+                  <span>{signingIn ? 'Signing in...' : 'Sign in with Google'}</span>
+                </button>
+              )}
+              <p className="form-hint">
+                Sign in with your Google account to use your Gemini Pro subscription.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* 回复设置 */}

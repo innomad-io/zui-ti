@@ -8,7 +8,9 @@ export class AIApiClient {
     request: GenerateReplyRequest,
     providerId: AIProviderId,
     model: string,
-    apiKey: string
+    apiKey: string,
+    useOAuth: boolean = false,
+    oauthToken?: string
   ): Promise<GenerateReplyResponse> {
     const provider = getProvider(providerId);
     if (!provider) {
@@ -25,7 +27,7 @@ export class AIApiClient {
     );
 
     try {
-      const reply = await this.callApi(providerId, model, apiKey, userPrompt);
+      const reply = await this.callApi(providerId, model, apiKey, userPrompt, useOAuth, oauthToken);
       return { reply: reply.trim() };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -39,7 +41,9 @@ export class AIApiClient {
     providerId: AIProviderId,
     model: string,
     apiKey: string,
-    count: number = 2
+    count: number = 2,
+    useOAuth: boolean = false,
+    oauthToken?: string
   ): Promise<string[]> {
     const styleHint = this.getStyleHint(request.style);
     const prompt = generateAlternativesPrompt(
@@ -50,7 +54,7 @@ export class AIApiClient {
     );
 
     try {
-      const response = await this.callApi(providerId, model, apiKey, prompt);
+      const response = await this.callApi(providerId, model, apiKey, prompt, useOAuth, oauthToken);
       const parsed = JSON.parse(response.trim());
       if (Array.isArray(parsed)) {
         return parsed.map(s => String(s).trim());
@@ -69,11 +73,13 @@ export class AIApiClient {
     providerId: AIProviderId,
     model: string,
     apiKey: string,
-    userPrompt: string
+    userPrompt: string,
+    useOAuth: boolean = false,
+    oauthToken?: string
   ): Promise<string> {
     switch (providerId) {
       case 'gemini':
-        return this.callGemini(model, apiKey, userPrompt);
+        return this.callGemini(model, apiKey, userPrompt, useOAuth, oauthToken);
       case 'openai':
       case 'deepseek':
         return this.callOpenAICompatible(providerId, model, apiKey, userPrompt);
@@ -84,12 +90,33 @@ export class AIApiClient {
     }
   }
 
-  private async callGemini(model: string, apiKey: string, userPrompt: string): Promise<string> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  private async callGemini(
+    model: string,
+    apiKey: string,
+    userPrompt: string,
+    useOAuth: boolean = false,
+    oauthToken?: string
+  ): Promise<string> {
+    let url: string;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useOAuth && oauthToken) {
+      // 使用 OAuth token 调用 Gemini API
+      // OAuth 方式使用不同的端点和认证头
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      headers['Authorization'] = `Bearer ${oauthToken}`;
+      console.log('[Gemini] 🔐 Using OAuth authentication');
+    } else {
+      // 使用 API Key 调用
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      console.log('[Gemini] 🔑 Using API Key authentication');
+    }
     
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         systemInstruction: {
           parts: [{ text: SYSTEM_PROMPT }],

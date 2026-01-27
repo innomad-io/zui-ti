@@ -3,6 +3,9 @@ import type { AIProviderId, ReplyStyleId } from './api';
 // 安全等级
 export type SafetyLevel = 'relaxed' | 'balanced' | 'strict';
 
+// Gemini 认证方式
+export type GeminiAuthType = 'apiKey' | 'oauth';
+
 export interface SafetyConfig {
   maxRepliesPerHour: number;
   minIntervalSeconds: number;
@@ -19,6 +22,13 @@ export interface CustomPrompt {
   createdAt: number;
 }
 
+// OAuth Token 信息
+export interface OAuthToken {
+  accessToken: string;
+  expiresAt: number; // timestamp
+  refreshToken?: string;
+}
+
 // 用户设置
 export interface UserSettings {
   // AI 配置
@@ -26,6 +36,9 @@ export interface UserSettings {
     provider: AIProviderId;
     model: string;
     apiKey: string; // 加密存储
+    // Gemini OAuth 配置
+    geminiAuthType?: GeminiAuthType;
+    geminiOAuthToken?: OAuthToken;
   };
 
   // 默认回复设置
@@ -60,6 +73,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     provider: 'gemini',
     model: 'gemini-2.5-flash',
     apiKey: '',
+    geminiAuthType: 'apiKey',
   },
   reply: {
     defaultStyle: 'friendly',

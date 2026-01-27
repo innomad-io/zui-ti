@@ -199,13 +199,15 @@ body {
 }
 
 /* Safety Options */
-.safety-options {
+.safety-options,
+.auth-options {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
-.safety-option {
+.safety-option,
+.auth-option {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -218,23 +220,28 @@ body {
   transition: all 0.2s;
 }
 
-.safety-option:hover {
+.safety-option:hover,
+.auth-option:hover {
   border-color: #1d9bf0;
 }
 
-.safety-option.active {
+.safety-option.active,
+.auth-option.active {
   border-color: #1d9bf0;
   background: rgba(29, 155, 240, 0.08);
 }
 
-.safety-name {
+.safety-name,
+.auth-name {
   font-size: 15px;
   font-weight: 600;
 }
 
-.safety-desc {
+.safety-desc,
+.auth-desc {
   font-size: 12px;
   color: #657786;
+  text-align: center;
 }
 
 .safety-info {
@@ -322,6 +329,74 @@ body {
   margin: 4px 0;
 }
 
+/* Google Sign In/Out Buttons */
+.google-sign-in-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 24px;
+  border: 2px solid #e6ecf0;
+  border-radius: 12px;
+  background: white;
+  color: #14171a;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.google-sign-in-btn:hover:not(:disabled) {
+  border-color: #1d9bf0;
+  background: rgba(29, 155, 240, 0.04);
+}
+
+.google-sign-in-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.google-auth-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(0, 186, 124, 0.08);
+  border-radius: 12px;
+}
+
+.auth-status-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #00ba7c;
+  font-weight: 500;
+}
+
+.icon-success {
+  color: #00ba7c;
+}
+
+.google-sign-out-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(244, 33, 46, 0.1);
+  color: #f4212e;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.google-sign-out-btn:hover {
+  background: rgba(244, 33, 46, 0.2);
+}
+
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
   body {
@@ -354,9 +429,20 @@ body {
   }
 
   .style-option,
-  .safety-option {
+  .safety-option,
+  .auth-option {
     background: #15202b;
     border-color: #38444d;
+  }
+
+  .google-sign-in-btn {
+    background: #15202b;
+    border-color: #38444d;
+    color: #e7e9ea;
+  }
+
+  .google-auth-status {
+    background: rgba(0, 186, 124, 0.15);
   }
 
   .safety-info {
