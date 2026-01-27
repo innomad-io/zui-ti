@@ -1,0 +1,61 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build extension
+        run: pnpm build
+      
+      - name: Create zip archive
+        run: |
+          cd dist
+          zip -r ../zui-ti-${{ github.ref_name }}.zip .
+          cd ..
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: zui-ti-${{ github.ref_name }}.zip
+          body: |
+            ## ZuiTi ${{ github.ref_name }}
+            
+            ### Installation
+            1. Download `zui-ti-${{ github.ref_name }}.zip`
+            2. Extract the zip file
+            3. Open Chrome and go to `chrome://extensions/`
+            4. Enable "Developer mode"
+            5. Click "Load unpacked" and select the extracted folder
+            
+            ### Features
+            - AI-powered reply generation for X (Twitter)
+            - Support for multiple AI providers (Gemini, OpenAI, Claude, DeepSeek)
+            - Automatic model rotation for increased daily quota
+            - Multiple reply styles
+            - Rate limiting and safety features
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
