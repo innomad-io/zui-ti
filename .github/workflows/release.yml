@@ -38,14 +38,31 @@ jobs:
           zip -r ../zui-ti-${{ github.ref_name }}.zip .
           cd ..
       
+      - name: Create CRX file
+        run: |
+          npm install -g crx3
+          echo "${{ secrets.CRX_PRIVATE_KEY }}" > extension-key.pem
+          crx3 dist -p extension-key.pem -o zui-ti-${{ github.ref_name }}.crx
+          rm extension-key.pem
+      
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: zui-ti-${{ github.ref_name }}.zip
+          files: |
+            zui-ti-${{ github.ref_name }}.zip
+            zui-ti-${{ github.ref_name }}.crx
           body: |
             ## ZuiTi ${{ github.ref_name }}
             
             ### Installation
+            
+            **Option 1: CRX (Recommended)**
+            1. Download `zui-ti-${{ github.ref_name }}.crx`
+            2. Open Chrome and go to `chrome://extensions/`
+            3. Enable "Developer mode"
+            4. Drag and drop the .crx file onto the page
+            
+            **Option 2: Unpacked**
             1. Download `zui-ti-${{ github.ref_name }}.zip`
             2. Extract the zip file
             3. Open Chrome and go to `chrome://extensions/`
