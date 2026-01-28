@@ -93,8 +93,17 @@ export class GeminiModelRotator {
   }
 
   private getResetTimestamp(): number {
-    const tomorrow = new Date();
-    tomorrow.setHours(24, 0, 0, 0);
-    return tomorrow.getTime();
+    const now = new Date();
+    const pstOffset = -8 * 60;
+    const localOffset = now.getTimezoneOffset();
+    const offsetDiff = localOffset - pstOffset;
+    
+    const pstNow = new Date(now.getTime() + offsetDiff * 60 * 1000);
+    
+    const pstMidnight = new Date(pstNow);
+    pstMidnight.setHours(24, 0, 0, 0);
+    
+    const utcMidnight = new Date(pstMidnight.getTime() - offsetDiff * 60 * 1000);
+    return utcMidnight.getTime();
   }
 }

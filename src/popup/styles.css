@@ -125,6 +125,89 @@ body {
   text-align: right;
 }
 
+/* Gemini Usage Section */
+.gemini-usage-section {
+  background: #f7f9f9;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.gemini-usage-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #657786;
+  margin-bottom: 10px;
+}
+
+.gemini-models-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.model-mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.model-mini-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #14171a;
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.model-mini-bar {
+  flex: 1;
+  height: 6px;
+  background: #e6ecf0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.model-mini-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.model-mini-fill[data-status="normal"] {
+  background: linear-gradient(90deg, #1d9bf0, #00ba7c);
+}
+
+.model-mini-fill[data-status="warning"] {
+  background: linear-gradient(90deg, #ffad1f, #ff8c00);
+}
+
+.model-mini-fill[data-status="danger"] {
+  background: linear-gradient(90deg, #f4212e, #c41e3a);
+}
+
+.model-mini-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #657786;
+  width: 35px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.gemini-total {
+  font-size: 12px;
+  font-weight: 600;
+  color: #14171a;
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid #e6ecf0;
+}
+
 /* Info Section */
 .info-section {
   display: flex;
@@ -225,6 +308,23 @@ body {
 
   .usage-bar {
     background: #38444d;
+  }
+
+  .gemini-usage-section {
+    background: #192734;
+  }
+
+  .model-mini-name {
+    color: #e7e9ea;
+  }
+
+  .model-mini-bar {
+    background: #38444d;
+  }
+
+  .gemini-total {
+    color: #e7e9ea;
+    border-color: #38444d;
   }
 
   .info-item {

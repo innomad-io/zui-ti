@@ -46,6 +46,7 @@ export interface UserSettings {
     defaultStyle: ReplyStyleId;
     defaultLanguage: 'zh' | 'en' | 'auto';
     maxLength: number;
+    customPrompt: string;
     generateAlternatives: boolean;
     alternativesCount: number;
   };
@@ -79,6 +80,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     defaultStyle: 'friendly',
     defaultLanguage: 'auto',
     maxLength: 280,
+    customPrompt: '',
     generateAlternatives: true,
     alternativesCount: 2,
   },

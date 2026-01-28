@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Eye, EyeOff, Check, AlertCircle, Zap, Shield, Palette, LogIn, LogOut } from 'lucide-react';
-import type { UserSettings, AIProviderId, SafetyLevel, GeminiAuthType } from '@/shared/types';
+import { Save, Eye, EyeOff, Check, AlertCircle, Zap, Shield, Palette } from 'lucide-react';
+import type { UserSettings, AIProviderId, SafetyLevel } from '@/shared/types';
 import { DEFAULT_SETTINGS, SAFETY_PRESETS } from '@/shared/types';
 import { AI_PROVIDERS, getProvider, STYLE_LIST } from '@/shared/constants';
 
@@ -11,26 +11,25 @@ export const Options: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
-  const [signingIn, setSigningIn] = useState(false);
+  const [geminiUsage, setGeminiUsage] = useState<{ model: string; count: number; remaining: number }[]>([]);
 
   // 加载设置
   useEffect(() => {
     loadSettings();
-    checkGoogleAuth();
+    loadGeminiUsage();
   }, []);
 
-  const checkGoogleAuth = async () => {
+  const loadGeminiUsage = async () => {
     try {
       const response = await chrome.runtime.sendMessage({
-        type: 'CHECK_GOOGLE_AUTH',
+        type: 'GET_GEMINI_USAGE',
         payload: null,
       });
-      if (response?.isSignedIn) {
-        setIsGoogleSignedIn(true);
+      if (response?.stats) {
+        setGeminiUsage(response.stats);
       }
     } catch (err) {
-      console.error('Failed to check Google auth:', err);
+      console.error('Failed to load Gemini usage:', err);
     }
   };
 
@@ -95,59 +94,8 @@ export const Options: React.FC = () => {
     }));
   };
 
-  const handleGoogleSignIn = async () => {
-    setSigningIn(true);
-    setError(null);
-    try {
-      const response = await chrome.runtime.sendMessage({
-        type: 'GOOGLE_SIGN_IN',
-        payload: null,
-      });
-      if (response?.error) {
-        setError(response.error);
-      } else if (response?.success) {
-        setIsGoogleSignedIn(true);
-        setSettings(prev => ({
-          ...prev,
-          ai: { ...prev.ai, geminiAuthType: 'oauth' },
-        }));
-      }
-    } catch (err) {
-      setError('Failed to sign in with Google');
-    } finally {
-      setSigningIn(false);
-    }
-  };
-
-  const handleGoogleSignOut = async () => {
-    try {
-      const response = await chrome.runtime.sendMessage({
-        type: 'GOOGLE_SIGN_OUT',
-        payload: null,
-      });
-      if (response?.success) {
-        setIsGoogleSignedIn(false);
-        setSettings(prev => ({
-          ...prev,
-          ai: { ...prev.ai, geminiAuthType: 'apiKey' },
-        }));
-      }
-    } catch (err) {
-      setError('Failed to sign out');
-    }
-  };
-
-  const handleAuthTypeChange = (authType: GeminiAuthType) => {
-    setSettings(prev => ({
-      ...prev,
-      ai: { ...prev.ai, geminiAuthType: authType },
-    }));
-  };
-
   const currentProvider = getProvider(settings.ai.provider);
   const currentSafetyConfig = settings.safety.customConfig || SAFETY_PRESETS[settings.safety.level];
-  const isGemini = settings.ai.provider === 'gemini';
-  const geminiAuthType = settings.ai.geminiAuthType || 'apiKey';
 
   return (
     <div className="options-container">
@@ -198,88 +146,68 @@ export const Options: React.FC = () => {
             </select>
           </div>
 
-          {/* Gemini 认证方式选择 */}
-          {isGemini && (
-            <div className="form-group">
-              <label>Authentication Method</label>
-              <div className="auth-options">
-                <button
-                  className={`auth-option ${geminiAuthType === 'apiKey' ? 'active' : ''}`}
-                  onClick={() => handleAuthTypeChange('apiKey')}
-                >
-                  <span className="auth-name">API Key</span>
-                  <span className="auth-desc">Use Google AI Studio API Key</span>
-                </button>
-                <button
-                  className={`auth-option ${geminiAuthType === 'oauth' ? 'active' : ''}`}
-                  onClick={() => handleAuthTypeChange('oauth')}
-                >
-                  <span className="auth-name">Google Account</span>
-                  <span className="auth-desc">Use Gemini Pro subscription</span>
-                </button>
-              </div>
+          <div className="form-group">
+            <label>API Key</label>
+            <div className="input-with-icon">
+              <input
+                type={showApiKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your API key"
+              />
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setShowApiKey(!showApiKey)}
+              >
+                {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
-          )}
-
-          {/* API Key 输入 - 仅在选择 API Key 认证时显示 */}
-          {(!isGemini || geminiAuthType === 'apiKey') && (
-            <div className="form-group">
-              <label>API Key</label>
-              <div className="input-with-icon">
-                <input
-                  type={showApiKey ? 'text' : 'password'}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Enter your API key"
-                />
-                <button
-                  type="button"
-                  className="icon-btn"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                >
-                  {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              <p className="form-hint">
-                Your API key is encrypted and stored locally. It is never sent to any server except the AI provider.
-              </p>
-            </div>
-          )}
-
-          {/* Google 登录按钮 - 仅在选择 OAuth 认证时显示 */}
-          {isGemini && geminiAuthType === 'oauth' && (
-            <div className="form-group">
-              <label>Google Account</label>
-              {isGoogleSignedIn ? (
-                <div className="google-auth-status">
-                  <div className="auth-status-info">
-                    <Check size={18} className="icon-success" />
-                    <span>Connected with Google</span>
-                  </div>
-                  <button
-                    className="google-sign-out-btn"
-                    onClick={handleGoogleSignOut}
-                  >
-                    <LogOut size={16} />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              ) : (
-                <button
-                  className="google-sign-in-btn"
-                  onClick={handleGoogleSignIn}
-                  disabled={signingIn}
-                >
-                  <LogIn size={18} />
-                  <span>{signingIn ? 'Signing in...' : 'Sign in with Google'}</span>
-                </button>
-              )}
-              <p className="form-hint">
-                Sign in with your Google account to use your Gemini Pro subscription.
-              </p>
-            </div>
-          )}
+            <p className="form-hint">
+              Your API key is encrypted and stored locally. It is never sent to any server except the AI provider.
+            </p>
+          </div>
         </section>
+
+        {/* Gemini 使用情况 */}
+        {settings.ai.provider === 'gemini' && (
+          <section className="settings-section">
+            <div className="section-header">
+              <Zap size={20} />
+              <h2>Model Usage (Daily)</h2>
+            </div>
+
+            <div className="gemini-usage-grid">
+              {geminiUsage.map(stat => {
+                const percent = (stat.count / 20) * 100;
+                const getBarClass = () => {
+                  if (stat.remaining === 0) return 'usage-bar-fill danger';
+                  if (stat.remaining < 5) return 'usage-bar-fill warning';
+                  return 'usage-bar-fill normal';
+                };
+                
+                return (
+                  <div key={stat.model} className="usage-card">
+                    <div className="usage-card-header">
+                      <span className="model-name">{stat.model}</span>
+                      <span className="usage-count">{stat.count}/20</span>
+                    </div>
+                    <div className="usage-bar-container">
+                      <div className={getBarClass()} style={{ width: `${percent}%` }} />
+                    </div>
+                    <div className="usage-remaining">
+                      {stat.remaining} requests remaining
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="form-hint" style={{ marginTop: '12px' }}>
+              Resets daily at midnight PST. Total capacity: 60 requests per day across all models.
+            </p>
+          </section>
+        )}
 
         {/* 回复设置 */}
         <section className="settings-section">
@@ -323,9 +251,27 @@ export const Options: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label>Max Reply Length</label>
+            <label>Custom Prompt (Optional)</label>
+            <textarea
+              className="custom-prompt-input"
+              value={settings.reply.customPrompt || ''}
+              onChange={(e) => setSettings(prev => ({
+                ...prev,
+                reply: { ...prev.reply, customPrompt: e.target.value },
+              }))}
+              placeholder="Enter custom instructions for AI to follow when generating replies..."
+              rows={4}
+            />
+            <p className="form-hint">
+              Add custom instructions to guide the AI's response style and behavior.
+            </p>
+          </div>
+
+          <div className="form-group">
+            <label>Character Limit: {settings.reply.maxLength}</label>
             <input
-              type="number"
+              type="range"
+              className="char-limit-slider"
               value={settings.reply.maxLength}
               onChange={(e) => setSettings(prev => ({
                 ...prev,
@@ -333,7 +279,16 @@ export const Options: React.FC = () => {
               }))}
               min={50}
               max={500}
+              step={10}
             />
+            <div className="slider-markers">
+              <span>50</span>
+              <span>280</span>
+              <span>500</span>
+            </div>
+            <p className="form-hint">
+              Set the maximum character length for generated replies.
+            </p>
           </div>
 
           <div className="form-group checkbox-group">

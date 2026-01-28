@@ -65,6 +65,7 @@ export type MessageType =
   | 'GOOGLE_SIGN_IN'
   | 'GOOGLE_SIGN_OUT'
   | 'CHECK_GOOGLE_AUTH'
+  | 'GET_GEMINI_USAGE'
   | 'ERROR';
 
 export interface Message<T = unknown> {

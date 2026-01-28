@@ -11,6 +11,7 @@ interface GenerateOptions {
   tweetAuthor: string;
   style: ReplyStyleId;
   customPrompt?: string;
+  maxLength?: number;
   context?: string;
 }
 
@@ -31,6 +32,7 @@ export function useReplyGenerator(options: UseReplyGeneratorOptions = {}) {
         tweetAuthor: opts.tweetAuthor,
         style: opts.style,
         customPrompt: opts.customPrompt,
+        maxLength: opts.maxLength,
         context: opts.context,
         language: 'auto',
       };

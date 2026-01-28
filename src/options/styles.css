@@ -397,6 +397,140 @@ body {
   background: rgba(244, 33, 46, 0.2);
 }
 
+/* Custom Prompt Textarea */
+.custom-prompt-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #cfd9de;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.custom-prompt-input:focus {
+  outline: none;
+  border-color: #1d9bf0;
+}
+
+/* Character Limit Slider */
+.char-limit-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e6ecf0;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.char-limit-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1d9bf0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.char-limit-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.char-limit-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1d9bf0;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.char-limit-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+.slider-markers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #657786;
+}
+
+/* Gemini Usage Display */
+.gemini-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.usage-card {
+  background: #f7f9f9;
+  border: 1px solid #e6ecf0;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.usage-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.usage-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.model-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #14171a;
+}
+
+.usage-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #657786;
+}
+
+.usage-bar-container {
+  height: 8px;
+  background: #e6ecf0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.usage-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.usage-bar-fill.normal {
+  background: linear-gradient(90deg, #1d9bf0, #00ba7c);
+}
+
+.usage-bar-fill.warning {
+  background: linear-gradient(90deg, #ffad1f, #ff8c00);
+}
+
+.usage-bar-fill.danger {
+  background: linear-gradient(90deg, #f4212e, #c41e3a);
+}
+
+.usage-remaining {
+  font-size: 12px;
+  color: #657786;
+  text-align: right;
+}
+
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
   body {
@@ -451,5 +585,28 @@ body {
 
   .safety-info strong {
     color: #e7e9ea;
+  }
+
+  .custom-prompt-input {
+    background: #15202b;
+    border-color: #38444d;
+    color: #e7e9ea;
+  }
+
+  .char-limit-slider {
+    background: #38444d;
+  }
+
+  .usage-card {
+    background: #15202b;
+    border-color: #38444d;
+  }
+
+  .model-name {
+    color: #e7e9ea;
+  }
+
+  .usage-bar-container {
+    background: #38444d;
   }
 }

@@ -61,6 +61,9 @@ async function handleMessageAsync(message: Message): Promise<unknown> {
       case 'CHECK_GOOGLE_AUTH':
         return await handleCheckGoogleAuth();
 
+      case 'GET_GEMINI_USAGE':
+        return await handleGetGeminiUsage();
+
       default:
         return { error: 'Unknown message type' };
     }
@@ -214,5 +217,15 @@ async function handleCheckGoogleAuth(): Promise<unknown> {
     return { isSignedIn };
   } catch (err) {
     return { isSignedIn: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
+
+async function handleGetGeminiUsage(): Promise<unknown> {
+  try {
+    const rotator = new GeminiModelRotator();
+    const stats = await rotator.getUsageStats();
+    return { stats };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to get Gemini usage' };
   }
 }

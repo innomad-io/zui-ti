@@ -12,6 +12,7 @@ interface ReplyModalProps {
 export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, onClose }) => {
   const [style, setStyle] = useState<ReplyStyleId>('friendly');
   const [copied, setCopied] = useState(false);
+  const [settings, setSettings] = useState<{ customPrompt?: string; maxLength?: number } | null>(null);
 
   const {
     isLoading,
@@ -28,16 +29,39 @@ export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, onClose }) => {
   const { canReply, waitTime, formatWaitTime, repliesInLastHour } = useRateLimit();
 
   useEffect(() => {
-    if (canReply) {
+    const loadSettings = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: 'GET_SETTINGS',
+          payload: null,
+        });
+        if (response) {
+          setSettings({
+            customPrompt: response.reply?.customPrompt,
+            maxLength: response.reply?.maxLength,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+      }
+    };
+    
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
+    if (canReply && settings) {
       handleGenerate();
     }
-  }, []);
+  }, [settings]);
 
   const handleGenerate = async () => {
     await generate({
       tweetContent: tweet.content,
       tweetAuthor: tweet.authorHandle,
       style,
+      customPrompt: settings?.customPrompt,
+      maxLength: settings?.maxLength,
     });
   };
 

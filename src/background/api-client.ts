@@ -23,7 +23,9 @@ export class AIApiClient {
       request.tweetAuthor,
       styleHint,
       request.context,
-      request.customPrompt
+      request.customPrompt,
+      request.maxLength,
+      request.language
     );
 
     try {
@@ -129,7 +131,7 @@ export class AIApiClient {
         ],
         generationConfig: {
           temperature: 0.8,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096,
         },
       }),
     });
@@ -172,7 +174,7 @@ export class AIApiClient {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.8,
-        max_tokens: 1024,
+        max_tokens: 4096,
       }),
     });
 
@@ -195,7 +197,7 @@ export class AIApiClient {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 1024,
+        max_tokens: 4096,
         system: SYSTEM_PROMPT,
         messages: [
           { role: 'user', content: userPrompt },

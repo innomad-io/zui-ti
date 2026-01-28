@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Settings, Shield, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
-import type { UserSettings, RateLimitStatus } from '@/shared/types';
-import { DEFAULT_SETTINGS, SAFETY_PRESETS } from '@/shared/types';
+import { Zap, Settings, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import type { UserSettings } from '@/shared/types';
+import { DEFAULT_SETTINGS } from '@/shared/types';
 
 export const Popup: React.FC = () => {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
-  const [rateStatus, setRateStatus] = useState<RateLimitStatus | null>(null);
   const [isConfigured, setIsConfigured] = useState(false);
+  const [geminiUsage, setGeminiUsage] = useState<{ model: string; count: number; remaining: number }[]>([]);
 
   useEffect(() => {
     loadData();
@@ -14,7 +14,6 @@ export const Popup: React.FC = () => {
 
   const loadData = async () => {
     try {
-      // 加载设置
       const settingsResponse = await chrome.runtime.sendMessage({
         type: 'GET_SETTINGS',
         payload: null,
@@ -24,13 +23,14 @@ export const Popup: React.FC = () => {
         setIsConfigured(!!settingsResponse.ai?.apiKey);
       }
 
-      // 检查速率限制
-      const rateResponse = await chrome.runtime.sendMessage({
-        type: 'CHECK_RATE_LIMIT',
-        payload: null,
-      });
-      if (rateResponse) {
-        setRateStatus(rateResponse);
+      if (settingsResponse?.ai?.provider === 'gemini') {
+        const usageResponse = await chrome.runtime.sendMessage({
+          type: 'GET_GEMINI_USAGE',
+          payload: null,
+        });
+        if (usageResponse?.stats) {
+          setGeminiUsage(usageResponse.stats);
+        }
       }
     } catch (err) {
       console.error('Failed to load data', err);
@@ -45,10 +45,7 @@ export const Popup: React.FC = () => {
     chrome.tabs.create({ url: 'https://x.com' });
   };
 
-  const safetyConfig = settings.safety.customConfig || SAFETY_PRESETS[settings.safety.level];
-  const usagePercent = rateStatus 
-    ? Math.min((rateStatus.repliesInLastHour / safetyConfig.maxRepliesPerHour) * 100, 100)
-    : 0;
+  const totalRemaining = geminiUsage.reduce((sum, stat) => sum + stat.remaining, 0);
 
   return (
     <div className="popup-container">
@@ -78,22 +75,40 @@ export const Popup: React.FC = () => {
         )}
       </div>
 
-      {/* Usage Stats */}
-      <div className="usage-section">
-        <div className="usage-header">
-          <Shield size={16} />
-          <span>Usage (Last Hour)</span>
+      {/* Gemini Usage Stats (只在 Gemini 时显示) */}
+      {settings.ai.provider === 'gemini' && geminiUsage.length > 0 && (
+        <div className="gemini-usage-section">
+          <div className="gemini-usage-header">
+            <Zap size={14} />
+            <span>Gemini Models (Today)</span>
+          </div>
+          <div className="gemini-models-compact">
+            {geminiUsage.map(stat => {
+              const shortName = stat.model
+                .replace('gemini-2.5-flash-lite', 'lite')
+                .replace('gemini-2.5-flash', 'flash')
+                .replace('gemini-3-flash-preview', 'preview');
+              const percent = (stat.count / 20) * 100;
+              return (
+                <div key={stat.model} className="model-mini">
+                  <span className="model-mini-name">{shortName}</span>
+                  <div className="model-mini-bar">
+                    <div 
+                      className="model-mini-fill" 
+                      style={{ width: `${percent}%` }}
+                      data-status={stat.remaining === 0 ? 'danger' : stat.remaining < 5 ? 'warning' : 'normal'}
+                    />
+                  </div>
+                  <span className="model-mini-count">{stat.count}/20</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="gemini-total">
+            Total: {totalRemaining}/60 remaining
+          </div>
         </div>
-        <div className="usage-bar">
-          <div 
-            className="usage-fill" 
-            style={{ width: `${usagePercent}%` }}
-          />
-        </div>
-        <div className="usage-text">
-          {rateStatus?.repliesInLastHour || 0} / {safetyConfig.maxRepliesPerHour} replies
-        </div>
-      </div>
+      )}
 
       {/* Quick Info */}
       <div className="info-section">

@@ -28,7 +28,9 @@ export const generateUserPrompt = (
   tweetAuthor: string,
   styleHint: string,
   context?: string,
-  customPrompt?: string
+  customPrompt?: string,
+  maxLength?: number,
+  language: 'zh' | 'en' | 'auto' = 'auto'
 ): string => {
   let prompt = `Original Tweet by @${tweetAuthor}:
 "${tweetContent}"
@@ -52,7 +54,30 @@ Style: ${styleHint}
 `;
   }
 
+  if (maxLength) {
+    const detectLanguage = (text: string): 'zh' | 'en' => {
+      const chineseChars = text.match(/[\u4e00-\u9fa5]/g);
+      return chineseChars && chineseChars.length > text.length * 0.3 ? 'zh' : 'en';
+    };
+
+    const detectedLang = language === 'auto' ? detectLanguage(tweetContent) : language;
+    const minLength = Math.floor(maxLength * 0.7);
+
+    if (detectedLang === 'zh') {
+      prompt += `
+
+LENGTH REQUIREMENT: Generate a reply between ${minLength} to ${maxLength} Chinese characters (字). Count characters, not words. This is important for the user interface.`;
+    } else {
+      const minWords = Math.floor(minLength / 5);
+      const maxWords = Math.floor(maxLength / 5);
+      prompt += `
+
+LENGTH REQUIREMENT: Generate a reply between ${minWords} to ${maxWords} English words. This is approximately ${minLength}-${maxLength} characters. This is important for the user interface.`;
+    }
+  }
+
   prompt += `
+
 Generate a natural, engaging reply that fits the style and context. Return ONLY the reply text, nothing else.`;
 
   return prompt;
