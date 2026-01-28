@@ -12,6 +12,9 @@ const SELECTORS = {
   articleContent: '.public-DraftEditor-content',
   articleBlock: '[data-block="true"]',
   longformContent: '[class*="longform"]',
+  // 对话框相关选择器
+  dialog: '[role="dialog"]',
+  replyingToButton: 'button',
 };
 
 function extractArticleContent(container: Element): string {
@@ -79,6 +82,49 @@ export function parseTweet(tweetElement: Element): ParsedTweet {
     console.log('[ZuiTi] Regular tweet content length:', content.length);
   }
 
+  // Content fallback: 如果当前 article 没有内容，尝试从主页面的 article 提取
+  if (!content || content.length < 50) {
+    console.log('[ZuiTi] Content fallback: trying main page article');
+    const mainArticle = document.querySelector('main article[data-testid="tweet"]');
+    if (mainArticle && mainArticle !== tweetElement) {
+      const mainContent = extractArticleContent(mainArticle);
+      if (mainContent && mainContent.length > content.length) {
+        content = mainContent;
+        console.log('[ZuiTi] ✓ Got content from main page article:', content.length, 'chars');
+      } else {
+        const mainTweetText = mainArticle.querySelector(SELECTORS.tweetText);
+        if (mainTweetText && mainTweetText.textContent) {
+          const mainText = mainTweetText.textContent;
+          if (mainText.length > content.length) {
+            content = mainText;
+            console.log('[ZuiTi] ✓ Got tweetText from main page article:', content.length, 'chars');
+          }
+        }
+      }
+    }
+  }
+
+  // Content fallback 2: 从对话框内 article 的 textContent 提取预览
+  if (!content || content.length < 50) {
+    console.log('[ZuiTi] Content fallback 2: trying dialog article textContent');
+    const dialog = document.querySelector(SELECTORS.dialog);
+    if (dialog) {
+      const dialogArticle = dialog.querySelector('article');
+      if (dialogArticle) {
+        const fullText = dialogArticle.textContent || '';
+        // 过滤掉常见的 UI 文本
+        const cleanedText = fullText
+          .replace(/Kevin Ma|@\w+|·|\d+h|\d+m|Article|Replying to/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (cleanedText.length > content.length) {
+          content = cleanedText;
+          console.log('[ZuiTi] ✓ Got content from dialog article textContent:', content.length, 'chars');
+        }
+      }
+    }
+  }
+
   const userNameEl = tweetElement.querySelector(SELECTORS.userName);
   console.log('[ZuiTi] User-Name element found:', !!userNameEl);
   console.log('[ZuiTi] User-Name HTML:', userNameEl?.outerHTML.substring(0, 200));
@@ -119,8 +165,62 @@ export function parseTweet(tweetElement: Element): ParsedTweet {
     }
   }
   
+  // Fallback 2: 从对话框的 "Replying to @username" 按钮提取
   if (!authorHandle) {
-    console.warn('[ZuiTi] ⚠️ Failed to extract author handle!');
+    console.log('[ZuiTi] Trying fallback 2: Replying to button in dialog');
+    const dialog = document.querySelector(SELECTORS.dialog);
+    if (dialog) {
+      const buttons = dialog.querySelectorAll('button');
+      for (const btn of buttons) {
+        const text = btn.textContent || '';
+        const match = text.match(/Replying to @(\w+)/);
+        if (match) {
+          authorHandle = match[1];
+          console.log('[ZuiTi] ✓ Extracted from Replying to button:', authorHandle);
+          break;
+        }
+      }
+    }
+  }
+
+  // Fallback 3: 从对话框内的任意用户链接提取
+  if (!authorHandle) {
+    console.log('[ZuiTi] Trying fallback 3: Any user link in dialog');
+    const dialog = document.querySelector(SELECTORS.dialog);
+    if (dialog) {
+      const userLinks = dialog.querySelectorAll('a[href^="/"]');
+      for (const link of userLinks) {
+        const href = link.getAttribute('href') || '';
+        // 排除非用户链接
+        if (href.includes('/status/') || href.includes('/home') || 
+            href.includes('/compose') || href.includes('/i/')) {
+          continue;
+        }
+        const parts = href.split('/').filter(Boolean);
+        if (parts.length === 1) {
+          authorHandle = parts[0];
+          if (!author) {
+            author = link.textContent?.trim() || '';
+          }
+          console.log('[ZuiTi] ✓ Extracted from dialog link:', authorHandle);
+          break;
+        }
+      }
+    }
+  }
+
+  // Fallback 4: 从 URL 提取（适用于单条推文页面）
+  if (!authorHandle) {
+    console.log('[ZuiTi] Trying fallback 4: URL extraction');
+    const urlMatch = window.location.pathname.match(/^\/(\w+)\/status\/\d+/);
+    if (urlMatch) {
+      authorHandle = urlMatch[1];
+      console.log('[ZuiTi] ✓ Extracted from URL:', authorHandle);
+    }
+  }
+
+  if (!authorHandle) {
+    console.warn('[ZuiTi] ⚠️ Failed to extract author handle after all fallbacks!');
   }
 
   const timeEl = tweetElement.querySelector(SELECTORS.time);

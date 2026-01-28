@@ -49,8 +49,34 @@ function observeReplyWindows(): void {
             let originalTweet = lastClickedArticle;
             console.log('[ZuiTi Inject] Using cached article from click:', !!originalTweet);
             
+            // 验证 lastClickedArticle 是否有完整内容，否则尝试找更好的
+            if (originalTweet) {
+              const hasLinks = originalTweet.querySelector('[data-testid="User-Name"] a');
+              const hasContent = originalTweet.querySelector('[data-testid="tweetText"]') || 
+                                originalTweet.querySelector('.public-DraftEditor-content');
+              if (!hasLinks && !hasContent) {
+                console.log('[ZuiTi Inject] Cached article is incomplete, looking for better one...');
+                originalTweet = null;
+              }
+            }
+            
+            // 优先从主页面 (main 元素内) 查找完整的 article
             if (!originalTweet) {
-              console.log('[ZuiTi Inject] Fallback: Searching document for article[data-testid="tweet"]...');
+              console.log('[ZuiTi Inject] Fallback: Searching main element for complete article...');
+              const mainArticle = document.querySelector('main article[data-testid="tweet"]');
+              if (mainArticle) {
+                const hasLinks = mainArticle.querySelector('[data-testid="User-Name"] a');
+                const hasContent = mainArticle.querySelector('[data-testid="tweetText"]') || 
+                                  mainArticle.querySelector('.public-DraftEditor-content');
+                if (hasLinks || hasContent) {
+                  originalTweet = mainArticle;
+                  console.log('[ZuiTi Inject] ✓ Found complete article in main');
+                }
+              }
+            }
+            
+            if (!originalTweet) {
+              console.log('[ZuiTi Inject] Fallback 2: Trying any article[data-testid="tweet"]...');
               originalTweet = document.querySelector('article[data-testid="tweet"]');
               console.log('[ZuiTi Inject] Found with article[data-testid="tweet"]:', !!originalTweet);
             }
