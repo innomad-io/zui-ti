@@ -2,6 +2,19 @@ import type { AIProviderId, GenerateReplyRequest, GenerateReplyResponse } from '
 import { SYSTEM_PROMPT, generateUserPrompt, generateAlternativesPrompt, REPLY_STYLES } from '@/shared/constants';
 import { getProvider } from '@/shared/constants/providers';
 
+export type RateLimitType = 'RPM' | 'RPD' | 'UNKNOWN';
+
+export class RateLimitError extends Error {
+  constructor(
+    message: string,
+    public readonly rateLimitType: RateLimitType,
+    public readonly model: string
+  ) {
+    super(message);
+    this.name = 'RateLimitError';
+  }
+}
+
 export class AIApiClient {
   // 生成回复
   async generateReply(
@@ -137,8 +150,20 @@ export class AIApiClient {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Gemini API error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      
+      // Parse 429 rate limit errors to distinguish RPM vs RPD
+      if (response.status === 429) {
+        const rateLimitType = this.parseGemini429Error(errorText);
+        console.error(`[Gemini] 429 Rate Limit: ${rateLimitType}`, errorText);
+        throw new RateLimitError(
+          `Gemini rate limit exceeded (${rateLimitType})`,
+          rateLimitType,
+          model
+        );
+      }
+      
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -212,6 +237,20 @@ export class AIApiClient {
 
     const data = await response.json();
     return data.content?.[0]?.text || '';
+  }
+
+  private parseGemini429Error(errorText: string): RateLimitType {
+    const lowerError = errorText.toLowerCase();
+    
+    if (lowerError.includes('per minute') || lowerError.includes('rpm') || lowerError.includes('requests per minute')) {
+      return 'RPM';
+    }
+    
+    if (lowerError.includes('per day') || lowerError.includes('rpd') || lowerError.includes('requests per day') || lowerError.includes('daily')) {
+      return 'RPD';
+    }
+    
+    return 'UNKNOWN';
   }
 }
 

@@ -1,5 +1,5 @@
 import type { Message, GenerateReplyRequest, RateLimitStatus, UserSettings } from '@/shared/types';
-import { apiClient } from './api-client';
+import { apiClient, RateLimitError } from './api-client';
 import { getSettings, saveSettings, getApiKey } from '@/shared/utils/storage';
 import { getValidOAuthToken, signInWithGoogle, signOutGoogle, isGoogleSignedIn } from '@/shared/utils/google-oauth';
 import { RateLimiter } from '@/shared/utils/rate-limiter';
@@ -105,23 +105,63 @@ async function handleGenerateReply(request: GenerateReplyRequest): Promise<unkno
 
   let modelToUse = settings.ai.model;
   const rotator = new GeminiModelRotator();
+  const triedModels: string[] = [];
+  const MAX_RETRIES = 3;
 
   if (settings.ai.provider === 'gemini') {
     modelToUse = await rotator.getAvailableModel(settings.ai.model);
     console.log(`[Gemini Rotator] Selected model: ${modelToUse} (preferred: ${settings.ai.model})`);
   }
 
-  const result = await apiClient.generateReply(
-    request,
-    settings.ai.provider,
-    modelToUse,
-    apiKey,
-    useOAuth,
-    oauthToken
-  );
+  let result: { reply: string; error?: string } = { reply: '' };
+  let lastError: Error | null = null;
 
-  if (result.error) {
-    return { error: result.error };
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      result = await apiClient.generateReply(
+        request,
+        settings.ai.provider,
+        modelToUse,
+        apiKey,
+        useOAuth,
+        oauthToken
+      );
+      
+      if (!result.error) {
+        break;
+      }
+      
+      lastError = new Error(result.error);
+    } catch (error) {
+      if (error instanceof RateLimitError && settings.ai.provider === 'gemini') {
+        console.log(`[Gemini] 429 ${error.rateLimitType} on model ${error.model}, attempt ${attempt + 1}/${MAX_RETRIES}`);
+        triedModels.push(modelToUse);
+
+        if (error.rateLimitType === 'RPD') {
+          await rotator.recordUsage(modelToUse);
+          const nextModel = await rotator.getAvailableModel();
+          
+          if (nextModel !== modelToUse && !triedModels.includes(nextModel)) {
+            console.log(`[Gemini] RPD hit, switching from ${modelToUse} to ${nextModel}`);
+            modelToUse = nextModel;
+            continue;
+          }
+        }
+
+        if (error.rateLimitType === 'RPM') {
+          console.log(`[Gemini] RPM hit, waiting 60s before retry...`);
+          await new Promise(resolve => setTimeout(resolve, 60000));
+          continue;
+        }
+      }
+      
+      lastError = error instanceof Error ? error : new Error(String(error));
+      break;
+    }
+  }
+
+  if (result.error || !result.reply) {
+    return { error: result.error || lastError?.message || 'Failed to generate reply' };
   }
 
   if (settings.ai.provider === 'gemini') {

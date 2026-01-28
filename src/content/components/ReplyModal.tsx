@@ -26,7 +26,7 @@ export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, onClose }) => {
     reset,
   } = useReplyGenerator();
 
-  const { canReply, waitTime, formatWaitTime, repliesInLastHour } = useRateLimit();
+  const { canReply, waitTime, formatWaitTime } = useRateLimit();
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -186,9 +186,7 @@ export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, onClose }) => {
           </div>
         )}
 
-        <div className="zui-footer">
-          <span>本小时已回复: {repliesInLastHour}</span>
-        </div>
+
       </div>
     </div>
   );
