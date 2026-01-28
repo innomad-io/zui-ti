@@ -1,5 +1,11 @@
 # ZuiTi - X (Twitter) AI 回复助手
 
+> 🚀 **关注我们，获取更多 AI 效率工具和技术分享**
+>
+> 📝 博客：[innomad.io](https://innomad.io) ｜ 𝕏 推特：[@innomad_io](https://x.com/innomad_io)
+
+---
+
 ZuiTi 是一款 Chrome 浏览器扩展，帮助你在 X (Twitter) 上快速生成高质量的 AI 回复。
 
 ## 功能特点
