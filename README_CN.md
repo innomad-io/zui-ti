@@ -1,6 +1,6 @@
 # ZuiTi - X (Twitter) AI 回复助手
 
-> 🚀 **关注我们，获取更多 AI 效率工具和技术分享**
+> 🚀 **欢迎关注作者的其他创作：关于理财、AI 和个人思考**
 >
 > 📝 博客：[innomad.io](https://innomad.io) ｜ 𝕏 推特：[@innomad_io](https://x.com/innomad_io)
 
