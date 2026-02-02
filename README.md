@@ -119,6 +119,16 @@ pnpm dev
 pnpm build
 ```
 
+## Privacy
+
+Your privacy is important to us. Please read our [Privacy Policy](./docs/privacy-policy.md) to understand how we handle your data.
+
+**Key Points:**
+- API keys are encrypted and stored locally in your browser
+- No data is uploaded to our servers
+- Tweet content is sent only to third-party AI providers (Gemini, OpenAI, Claude, DeepSeek)
+- No analytics or telemetry collected
+
 ## License
 
 MIT

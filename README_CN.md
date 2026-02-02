@@ -106,6 +106,16 @@ A: 目前仅支持 Chrome 及基于 Chromium 的浏览器（如 Edge、Arc、Bra
 ### Q: 我的 API Key 安全吗？
 A: API Key 仅存储在你的浏览器本地，不会上传到任何服务器。
 
+## 隐私政策
+
+您的隐私对我们非常重要。请阅读我们的 [隐私政策](./docs/privacy-policy.md) 了解我们如何处理您的数据。
+
+**关键要点：**
+- API Key 经过加密后存储在浏览器本地
+- 我们不会将任何数据上传到我们的服务器
+- 推文内容仅发送给第三方 AI 服务商（Gemini、OpenAI、Claude、DeepSeek）
+- 不收集任何分析或遥测数据
+
 ## 许可证
 
 MIT
