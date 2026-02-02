@@ -3,7 +3,6 @@
   "name": "ZuiTi",
   "version": "1.1.0",
   "description": "AI-powered reply generation for X (Twitter)",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp+ijgAFbfzEJcafkFmK3x3emvE87c4JYwG6A6+HaJNrf1mU9PbOB7NgXgQoRo4LmvbA8bafv2fT1iOnzIKvre26HDMp7HzVKYYhbQu9JVdFEfWEvmVYfNhkM/YtbIkB4CqT4uQyGS1TIVK3TfnRhSICIDfxptw/so7qFeZm1ZiJ6LmlYr1syLNYV4DhQCKsPfbxt7CKhvYddB/CTRvgfRJg8+kbxoqKUSvASdrCor2Q7kirY/gAODRtXcoy5NysP7rCl7qUgv4QPz1F7d9CXIBs2HEyUByFtMfVQ3KEjnocMGG+YOPRmf/oTYt6I7PAw0qhr9PW2j346LcrMyNp5pQIDAQAB",
   
   "permissions": [
     "storage",
