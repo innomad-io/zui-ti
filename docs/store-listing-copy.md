@@ -19,10 +19,10 @@ ZuiTi - AI Reply Assistant for X
 ### 英文版本
 
 ```
-AI-powered reply generator for X (Twitter). Support Gemini, OpenAI, Claude & DeepSeek with smart model rotation.
+AI-powered reply generator for X (Twitter). Supports Gemini, OpenAI, Claude & DeepSeek with smart model rotation.
 ```
 
-**字符数**: 121 / 132 ✅
+**字符数**: 122 / 132 ✅
 
 ### 中文版本（如需添加）
 
@@ -243,7 +243,7 @@ Takes less than 2 minutes to set up.
 Questions? Suggestions? Found a bug?
 • GitHub Issues: https://github.com/innomad-io/zui-ti/issues
 • X (Twitter): @innomad_io
-• Email: [可选]
+• Email: (optional)
 
 
 ⭐ RATE & REVIEW
